@@ -4,7 +4,7 @@ use ieee.std_logic_1164.all;
 entity alu is
     generic (n :integer := 16);
     port (
-        A, B : in std_logic_vector(n-1 downto 0);
+        A, B : in std_logic_vector(n-1 downto 0);       --A: Y, B: Bus
         Cin : in std_logic;
         Opcode: in std_logic_vector (4 downto 0);
         F : out std_logic_vector (n-1 downto 0);
