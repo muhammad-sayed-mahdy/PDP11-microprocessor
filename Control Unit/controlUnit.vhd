@@ -4,7 +4,6 @@ USE IEEE.STD_LOGIC_1164.ALL;
 ENTITY controlUnit IS
     GENERIC ( n : integer := 16; m : integer := 15);
     PORT(   IR                      : IN  std_logic_vector(n-1 DOWNTO 0);
-            controlWord             : IN  std_logic_vector(20 downto 0);
             inControlSignals        : OUT std_logic_vector(m-1 DOWNTO 0);
             outControlSignals       : OUT std_logic_vector(m-1-2 DOWNTO 0);
             readWriteControlSignals : OUT std_logic_vector(1 DOWNTO 0);
@@ -12,6 +11,13 @@ ENTITY controlUnit IS
 END ENTITY controlUnit;
 
 ARCHITECTURE cu_arch OF controlUnit IS
+
+COMPONENT rom IS
+GENERIC ( n : integer := 21);
+PORT(
+    address : IN  std_logic_vector(5 DOWNTO 0);
+    dataout : OUT std_logic_vector(n-1 DOWNTO 0));
+END COMPONENT;
 
 COMPONENT DecF1 IS
 	PORT (	IR	:	IN std_logic_vector(15 downto 0);
@@ -33,14 +39,16 @@ COMPONENT DecF6 IS
             D	:	OUT  std_logic_vector(1 downto 0));
 END COMPONENT;
 
-SIGNAL controlEnable : std_logic;
+SIGNAL controlEnable    : std_logic;
+SIGNAL controlWord      : std_logic_vector(20 downto 0);
+SIGNAL newAddress       : std_logic_vector(5 downto 0);
 
 BEGIN
 
-    -- controlWord either input or signal from rom component
-    -- controlEnable is always 1 (unless HLT ?)
+    cw : rom GENERIC MAP (21) PORT MAP (newAddress, controlWord);
 
-    controlEnable <= '1';
+    controlEnable   <=  '0' WHEN (IR = "1100000000000000")  -- HLT
+                    ELSE '1';
 
     f1 : DecF1 PORT MAP (IR, controlWord(14 downto 11), controlEnable, outControlSignals);
 
