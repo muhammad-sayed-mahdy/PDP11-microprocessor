@@ -105,7 +105,7 @@ BEGIN
   else '1' when IR(n-4 downto n-6) = "010" and FR(3) = '0'
   else '1' when IR(n-4 downto n-6) = "011" and FR(4) = '1'
   else '1' when IR(n-5 downto n-6) = "00" and (FR(4) = '1' or FR(3) = '1')
-  else '1' when IR(n-5 downto n-6) = "01" and (FR(4) = '1' or FR(3) = '0')
+  else '1' when IR(n-5 downto n-6) = "01" and (FR(4) = '0' or FR(3) = '0')
   else '1' when IR(n-6) = '0' and FR(4) = '0'
   else '0';
   
