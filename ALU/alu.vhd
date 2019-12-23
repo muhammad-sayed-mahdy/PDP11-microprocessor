@@ -35,6 +35,7 @@ begin
     Cout <= '0' when (Opcode(4 downto 2) = "101" or Opcode(4 downto 2) = "000")
     else Cout1 when (Opcode(4 downto 2) = "001")
     else Cout2 when (Opcode(4 downto 2) = "010")
+    else Cin when (Opcode = "01011")    --PB
     else Cout0;
 
     Z <= nor F;     --all zeros
