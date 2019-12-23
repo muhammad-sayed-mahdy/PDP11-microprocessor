@@ -63,7 +63,7 @@ SIGNAL newAddress, currentAddress       : std_logic_vector(5 downto 0);
 BEGIN
   
     microMar: reg GENERIC MAP (6) PORT MAP(controlEnable, clk, '0', newAddress, currentAddress); 
-    cw : rom GENERIC MAP (21) PORT MAP (newAddress, controlWord);
+    cw : rom GENERIC MAP (21) PORT MAP (currentAddress, controlWord);
     mypla: PLA GENERIC MAP (16,6) PORT MAP (IR, FR, controlWord(20 downto 15), currentAddress, newAddress);
 
     controlEnable   <=  '0' WHEN (IR = "1100000000000000")  -- HLT

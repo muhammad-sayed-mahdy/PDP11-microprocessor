@@ -11,8 +11,6 @@ END ENTITY DecF6;
 ARCHITECTURE mix OF DecF6 IS
 
 BEGIN
-
-    D   <=  not A  WHEN (E = '1' and (A(1) xor A(0)) = '1')
-        ELSE    "00";
-
+	D   <=  A  WHEN (E = '1' and (A(1) and A(0)) = '0')
+	ELSE    "00";
 END mix;
