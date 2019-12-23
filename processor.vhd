@@ -11,7 +11,7 @@ END ENTITY processor;
 ARCHITECTURE struct OF processor IS
     COMPONENT reg IS
     GENERIC ( n     : integer := 16);
-    PORT( Clk,Rst   : IN std_logic;
+    PORT( E, Clk,Rst   : IN std_logic;
             d       : IN std_logic_vector(n-1 DOWNTO 0);
             q       : OUT std_logic_vector(n-1 DOWNTO 0));
     END COMPONENT;
@@ -51,10 +51,10 @@ ARCHITECTURE struct OF processor IS
     end COMPONENT;
     type reg_arr is array (m-1 downto 0) of std_logic_vector(n-1 downto 0);         
 
-    SIGNAL registerReadArray, registerWriteArray   : reg_arr;       --register read, write data holders(d ,q)
+    SIGNAL registerWriteArray   : reg_arr;       --register write data holders (q)
 
     --TriStates = Cotrol Signals (read: in) (write: out)
-    SIGNAL tristaterReadArray   : std_logic_vector(m-1 downto 0);   --tristate read enable
+    SIGNAL regEnable            : std_logic_vector(m-1 downto 0);   
     SIGNAL tristaterWriteArray  : std_logic_vector(m-1-2 downto 0); --tristate write enable
     SIGNAL tristaterReadWRite   : std_logic_vector(1 downto 0);     --tristate read write memory enable
 
@@ -62,6 +62,7 @@ ARCHITECTURE struct OF processor IS
     SIGNAL oALU     : std_logic_vector(n-1 downto 0);   --alu output
 
     SIGNAL oRAM     :std_logic_vector(n-1 downto 0);   --ram output
+    SIGNAL iMDR     :std_logic_vector(n-1 downto 0);   --mdr input (d)
 --INDEXING
 --0     R0
 --1     R1
@@ -80,30 +81,28 @@ ARCHITECTURE struct OF processor IS
 --14    Y
 BEGIN
     --Register
-    createRegisters: FOR i IN m-1 DOWNTO 0 GENERATE    
-        cr: reg PORT MAP ( clk, reset(i), registerReadArray(i), registerWriteArray(i));
+    createRegisters: FOR i IN m-1-6 DOWNTO 0 GENERATE                                           --SOURCE to R0
+        cr: reg PORT MAP ( regEnable(i), clk, reset(i), bidir, registerWriteArray(i));
     END GENERATE createRegisters;
-
-    --Ram
-    r0: ram PORT MAP (mem_clk, tristaterReadWRite(1), registerWriteArray(13), registerWriteArray(10), oRAM);
-    tmdrr: tri_state PORT MAP (tristaterReadWRite(0), oRAM, registerReadArray(10));     --read in mdr in case of signal read
-
-    --Read all control signals
-    controlsignals: controlUnit PORT MAP (registerWriteArray(12), tristaterReadArray, tristaterWriteArray, tristaterReadWRite, sALU);
-
-    --Enable registers read(in) operations
-    readFromBus: FOR i IN m-1-6 DOWNTO 0 GENERATE                                       --SOURCE to R0
-        tr: tri_state PORT MAP (tristaterReadArray(i), bidir, registerReadArray(i)); 
-    END GENERATE readFromBus;
-    tzr: tri_state PORT MAP (tristaterReadArray(m-1-5), oALU, registerReadArray(m-1-5));    --Z
-    readFromBus2: FOR i IN m-1 DOWNTO m-1-4 GENERATE                                    --Y to MDR
-        tr2: tri_state PORT MAP (tristaterReadArray(i), bidir, registerReadArray(i));   
-    END GENERATE readFromBus2;
+    crz: reg PORT MAP ( regEnable(m-1-5), clk, reset(m-1-5), oALU, registerWriteArray(m-1-5));  --Z
+    crmdr: reg PORT MAP ( regEnable(m-1-4), clk, reset(m-1-4), iMDR, registerWriteArray(m-1-4));
+    createRegisters2: FOR i IN m-1 DOWNTO m-1-3 GENERATE                                        --Y to FR
+        cr2: reg PORT MAP ( regEnable(i), clk, reset(i), bidir, registerWriteArray(i));
+    END GENERATE createRegisters2;
 
     --Enable registers write(out) operations
     writeToBus: FOR i IN m-1-2 DOWNTO 0 GENERATE                                        --IR to R0
         tw: tri_state PORT MAP (tristaterWriteArray(i), registerWriteArray(i), bidir); 
     END GENERATE writeToBus;
+
+    --Ram
+    r0: ram PORT MAP (mem_clk, tristaterReadWRite(1), registerWriteArray(13), registerWriteArray(10), oRAM);
+    --read in mdr in case of signal read
+    iMDR <= oRAM WHEN (tristaterReadWRite(0) = '1')
+    ELSE bidir;     
+
+    --Read all control signals
+    controlsignals: controlUnit PORT MAP (registerWriteArray(12), regEnable, tristaterWriteArray, tristaterReadWRite, sALU);
 
     --ALU
     --I would like it to take IR, control store selectors, A(Y), BUS(bidir)...OUTPUT: what should be put in Z
