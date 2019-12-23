@@ -25,3 +25,4 @@ vsim.dbg
 
 # ignore work directory
 /work/*
+processor.mpf
