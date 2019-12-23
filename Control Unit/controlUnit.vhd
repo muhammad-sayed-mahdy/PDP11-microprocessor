@@ -3,7 +3,9 @@ USE IEEE.STD_LOGIC_1164.ALL;
 
 ENTITY controlUnit IS
     GENERIC ( n : integer := 16; m : integer := 15);
-    PORT(   IR                      : IN  std_logic_vector(n-1 DOWNTO 0);
+    PORT(   clk                     : IN  std_logic;
+            IR                      : IN  std_logic_vector(n-1 DOWNTO 0);
+            FR                      : IN  std_logic_vector(4 DOWNTO 0);   -- flag register required for branching decisions in PLA
             inControlSignals        : OUT std_logic_vector(m-1 DOWNTO 0);
             outControlSignals       : OUT std_logic_vector(m-1-2 DOWNTO 0);
             readWriteControlSignals : OUT std_logic_vector(1 DOWNTO 0);
@@ -26,11 +28,26 @@ COMPONENT DecF1 IS
 			D	:	OUT  std_logic_vector(12 downto 0));
 END COMPONENT;
 
+COMPONENT PLA IS
+    GENERIC ( n : integer := 16; m : integer := 6);
+	PORT(   IR                      : IN  std_logic_vector(n-1 DOWNTO 0);
+	         FR                     : IN std_logic_vector(4 downto 0);
+            baseaddress, currentaddress        : IN std_logic_vector(m-1 DOWNTO 0);
+            nextaddress       : OUT std_logic_vector(m-1 DOWNTO 0));
+END COMPONENT;
+
 COMPONENT DecF2_4 IS
     PORT (	IR	:	IN std_logic_vector(15 downto 0);
             A	:	IN std_logic_vector(6 downto 0);
             e	:	IN std_logic;
             D	:	OUT  std_logic_vector(14 downto 0));
+END COMPONENT;
+
+COMPONENT reg IS
+    GENERIC ( n : integer := 16);
+    PORT( E, Clk,Rst : IN std_logic;
+            d : IN std_logic_vector(n-1 DOWNTO 0);
+            q : OUT std_logic_vector(n-1 DOWNTO 0));
 END COMPONENT;
 
 COMPONENT DecF6 IS
@@ -41,11 +58,13 @@ END COMPONENT;
 
 SIGNAL controlEnable    : std_logic;
 SIGNAL controlWord      : std_logic_vector(20 downto 0);
-SIGNAL newAddress       : std_logic_vector(5 downto 0);
+SIGNAL newAddress, currentAddress       : std_logic_vector(5 downto 0);
 
 BEGIN
-
+  
+    microMar: reg GENERIC MAP (6) PORT MAP(controlEnable, clk, '0', newAddress, currentAddress); 
     cw : rom GENERIC MAP (21) PORT MAP (newAddress, controlWord);
+    mypla: PLA GENERIC MAP (16,6) PORT MAP (IR, FR, controlWord(20 downto 15), currentAddress, newAddress);
 
     controlEnable   <=  '0' WHEN (IR = "1100000000000000")  -- HLT
                     ELSE '1';

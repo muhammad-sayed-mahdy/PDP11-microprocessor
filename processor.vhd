@@ -33,7 +33,9 @@ ARCHITECTURE struct OF processor IS
 
     COMPONENT controlUnit IS
     GENERIC ( n : integer := 16);
-	PORT(   IR                      : IN  std_logic_vector(n-1 DOWNTO 0);
+	PORT(     clk                     : IN  std_logic;
+            IR                      : IN  std_logic_vector(n-1 DOWNTO 0);
+            FR                      : IN  std_logic_vector(4 DOWNTO 0);   -- flag register required for branching decisions in PLA
             inControlSignals        : OUT std_logic_vector(m-1 DOWNTO 0);
             outControlSignals       : OUT std_logic_vector(m-1-2 DOWNTO 0);
             readWriteControlSignals : OUT std_logic_vector(1 DOWNTO 0);
@@ -63,6 +65,7 @@ ARCHITECTURE struct OF processor IS
 
     SIGNAL oRAM     :std_logic_vector(n-1 downto 0);   --ram output
     SIGNAL iMDR     :std_logic_vector(n-1 downto 0);   --mdr input (d)
+    SIGNAL rom_clk  :std_logic;  --clock used by micro memory address register
 --INDEXING
 --0     R0
 --1     R1
@@ -102,7 +105,7 @@ BEGIN
     ELSE bidir;     
 
     --Read all control signals
-    controlsignals: controlUnit PORT MAP (registerWriteArray(12), regEnable, tristaterWriteArray, tristaterReadWRite, sALU);
+    controlsignals: controlUnit PORT MAP (rom_clk, registerWriteArray(12),  registerWriteArray(m-4)(4 downto 0), regEnable, tristaterWriteArray, tristaterReadWRite, sALU);
 
     --ALU
     --I would like it to take IR, control store selectors, A(Y), BUS(bidir)...OUTPUT: what should be put in Z
