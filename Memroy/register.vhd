@@ -3,7 +3,7 @@ USE IEEE.std_logic_1164.all;
 
 ENTITY reg IS
     GENERIC ( n : integer := 16);
-    PORT( Clk,Rst : IN std_logic;
+    PORT( E, Clk,Rst : IN std_logic;
             d : IN std_logic_vector(n-1 DOWNTO 0);
             q : OUT std_logic_vector(n-1 DOWNTO 0));
 END ENTITY reg;
@@ -16,7 +16,7 @@ BEGIN
         BEGIN
             IF Rst = '1' THEN
                     q <= (OTHERS=>'0');
-            ELSIF (rising_edge(Clk)) and (d(0) /= 'Z') THEN
+            ELSIF (rising_edge(Clk)) and (E = '1') THEN
                     q <= d;
             END IF;
         END PROCESS;
