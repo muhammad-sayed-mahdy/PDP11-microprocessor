@@ -6,6 +6,7 @@ ENTITY controlUnit IS
     PORT(   clk                     : IN  std_logic;
             IR                      : IN  std_logic_vector(n-1 DOWNTO 0);
             FR                      : IN  std_logic_vector(4 DOWNTO 0);   -- flag register required for branching decisions in PLA
+            interrupt               : IN std_logic;
             inControlSignals        : OUT std_logic_vector(m-1 DOWNTO 0);
             outControlSignals       : OUT std_logic_vector(m-1-2 DOWNTO 0);
             readWriteControlSignals : OUT std_logic_vector(1 DOWNTO 0);

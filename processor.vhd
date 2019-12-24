@@ -5,6 +5,7 @@ ENTITY processor IS
     GENERIC ( n : integer := 16; m : integer := 15);               --n: register size, m: number of registers
     PORT(   clk, mem_clk   : IN std_logic;  
             reset          : IN std_logic;
+            interrupt      : IN std_logic;
             bidir          : INOUT std_logic_vector(n-1 DOWNTO 0));
 END ENTITY processor;
 
@@ -50,6 +51,7 @@ ARCHITECTURE struct OF processor IS
 	PORT(     clk                     : IN  std_logic;
             IR                      : IN  std_logic_vector(n-1 DOWNTO 0);
             FR                      : IN  std_logic_vector(4 DOWNTO 0);   -- flag register required for branching decisions in PLA
+            interrupt               : IN std_logic;
             inControlSignals        : OUT std_logic_vector(m-1 DOWNTO 0);
             outControlSignals       : OUT std_logic_vector(m-1-2 DOWNTO 0);
             readWriteControlSignals : OUT std_logic_vector(1 DOWNTO 0);
@@ -128,7 +130,7 @@ BEGIN
     ELSE (regEnable(m-1-3) OR (sALU(0) AND sALU(1)));
 
     --Read all control signals
-    controlsignals: controlUnit PORT MAP (mem_clk, registerWriteArray(12),  registerWriteArray(11)(4 downto 0), regEnable, tristateWriteArray, tristateReadWrite, sALU);
+    controlsignals: controlUnit PORT MAP (mem_clk, registerWriteArray(12), registerWriteArray(11)(4 downto 0), interrupt, regEnable, tristateWriteArray, tristateReadWrite, sALU);
 
     --ALU
     a0: ALUController PORT MAP (sALU, registerWriteArray(12), registerWriteArray(14), bidir, registerWriteArray(11)(4), oALU, oFRALU); 
