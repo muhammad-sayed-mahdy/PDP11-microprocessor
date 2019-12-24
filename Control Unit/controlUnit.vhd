@@ -59,16 +59,20 @@ END COMPONENT;
 
 SIGNAL controlEnable    : std_logic;
 SIGNAL controlWord      : std_logic_vector(20 downto 0);
-SIGNAL newAddress       : std_logic_vector(5 downto 0);
+SIGNAL newAddress, nextAddress       : std_logic_vector(5 downto 0);
 SIGNAL currentAddress   : std_logic_vector(5 downto 0) := "000000";
 BEGIN
   
-    microMar: reg GENERIC MAP (6) PORT MAP(controlEnable, clk, '0', newAddress, currentAddress); 
+    microMar: reg GENERIC MAP (6) PORT MAP(controlEnable, clk, '0', nextAddress, currentAddress); 
     cw : rom GENERIC MAP (21) PORT MAP (currentAddress, controlWord);
     mypla: PLA GENERIC MAP (16,6) PORT MAP (IR, FR, controlWord(20 downto 15), currentAddress, newAddress);
 
     controlEnable   <=  '0' WHEN (IR = "1100000000000000")  -- HLT
                     ELSE '1';
+                      
+    nextAddress <= "111011" when newAddress = "000000" and interrupt = '1'
+    else "111010" when newAddress = "111111" and interrupt = '0'
+    else newAddress;
 
     f1 : DecF1 PORT MAP (IR, controlWord(14 downto 11), controlEnable, outControlSignals);
 
