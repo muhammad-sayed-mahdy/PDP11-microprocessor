@@ -4,7 +4,7 @@ USE IEEE.STD_LOGIC_1164.ALL;
 ENTITY processor IS
     GENERIC ( n : integer := 16; m : integer := 15);               --n: register size, m: number of registers
     PORT(   clk, mem_clk   : IN std_logic;  
-            reset          : IN std_logic_vector(m-1 DOWNTO 0);
+            reset          : IN std_logic;
             bidir          : INOUT std_logic_vector(n-1 DOWNTO 0));
 END ENTITY processor;
 
@@ -14,6 +14,20 @@ ARCHITECTURE struct OF processor IS
     PORT( E, Clk,Rst   : IN std_logic;
             d       : IN std_logic_vector(n-1 DOWNTO 0);
             q       : OUT std_logic_vector(n-1 DOWNTO 0));
+    END COMPONENT;
+
+    COMPONENT mdrReg IS
+    GENERIC ( n : integer := 16);
+    PORT( E, Clk1, Clk2, Rst : IN std_logic;
+            d : IN std_logic_vector(n-1 DOWNTO 0);
+            q : OUT std_logic_vector(n-1 DOWNTO 0));
+    END COMPONENT;
+
+    COMPONENT zReg IS
+    GENERIC ( n : integer := 16);
+    PORT( E, Clk, Rst : IN std_logic;
+            d : IN std_logic_vector(n-1 DOWNTO 0);
+            q : OUT std_logic_vector(n-1 DOWNTO 0));
     END COMPONENT;
 
     COMPONENT tri_state IS
@@ -86,13 +100,13 @@ ARCHITECTURE struct OF processor IS
 BEGIN
     --Register
     createRegisters: FOR i IN m-1-6 DOWNTO 0 GENERATE                                           --SOURCE to R0
-        cr: reg PORT MAP ( regEnable(i), clk, reset(i), bidir, registerWriteArray(i));
+        cr: reg PORT MAP ( regEnable(i), clk, reset, bidir, registerWriteArray(i));
     END GENERATE createRegisters;
-    crz: reg PORT MAP ( regEnable(m-1-5), clk, reset(m-1-5), oALU, registerWriteArray(m-1-5));  --Z
-    crmdr: reg PORT MAP ( emdr, clk, reset(m-1-4), iMDR, registerWriteArray(m-1-4));            --MDR
-    crfr: reg PORT MAP ( efr, clk, reset(m-1-3), iFR, registerWriteArray(m-1-3));               --FR
+    crz: zReg PORT MAP ( regEnable(m-1-5), clk, reset, oALU, registerWriteArray(m-1-5));        --Z
+    crmdr: mdrReg PORT MAP ( emdr, clk, clk, reset, iMDR, registerWriteArray(m-1-4));           --MDR
+    crfr: reg PORT MAP ( efr, clk, reset, iFR, registerWriteArray(m-1-3));                      --FR
     createRegisters2: FOR i IN m-1 DOWNTO m-1-2 GENERATE                                        --Y to IR
-        cr2: reg PORT MAP ( regEnable(i), clk, reset(i), bidir, registerWriteArray(i));
+        cr2: reg PORT MAP ( regEnable(i), clk, reset, bidir, registerWriteArray(i));
     END GENERATE createRegisters2;
 
     --Enable registers write(out) operations
@@ -110,11 +124,12 @@ BEGIN
     --read in FR in case of operation (sALU = "11")
     iFR <= oFRALU WHEN (sALU = "11")
     ELSE bidir;
-    efr <= regEnable(m-1-3) OR sALU(0) OR sALU(1);
+    efr <= '0' WHEN registerWriteArray(12)(n-1 DOWNTO n-3) = "101"
+    ELSE (regEnable(m-1-3) OR (sALU(0) AND sALU(1)));
 
     --Read all control signals
     controlsignals: controlUnit PORT MAP (mem_clk, registerWriteArray(12),  registerWriteArray(11)(4 downto 0), regEnable, tristateWriteArray, tristateReadWrite, sALU);
 
     --ALU
-    a0: ALUController PORT MAP (sALU, registerWriteArray(12), registerWriteArray(14), bidir, registerWriteArray(11)(0), oALU, oFRALU); 
+    a0: ALUController PORT MAP (sALU, registerWriteArray(12), registerWriteArray(14), bidir, registerWriteArray(11)(4), oALU, oFRALU); 
 END struct;

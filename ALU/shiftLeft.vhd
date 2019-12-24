@@ -18,7 +18,7 @@ begin
     F <= A(n-2 downto 0) & '0' when(S = "00")
     else A(n-2 downto 0) & A(n-1) when(S = "01")
     else A(n-2 downto 0) & Cin when(S = "10")
-    else (n-1 downto n/2 => '0') & A(n/2-1 downto 0);
+    else (n-1 downto n/2 => A(n/2-1)) & A(n/2-1 downto 0);
 
     Cout <= A(n-1);
 end ShiftLeft_arch ; 

@@ -58,8 +58,8 @@ END COMPONENT;
 
 SIGNAL controlEnable    : std_logic;
 SIGNAL controlWord      : std_logic_vector(20 downto 0);
-SIGNAL newAddress, currentAddress       : std_logic_vector(5 downto 0);
-
+SIGNAL newAddress       : std_logic_vector(5 downto 0);
+SIGNAL currentAddress   : std_logic_vector(5 downto 0) := "000000";
 BEGIN
   
     microMar: reg GENERIC MAP (6) PORT MAP(controlEnable, clk, '0', newAddress, currentAddress); 
