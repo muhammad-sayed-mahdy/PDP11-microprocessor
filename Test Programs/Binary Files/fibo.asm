@@ -7,5 +7,5 @@ mov R1, R0
 mov R2, R1
 inc R3
 cmp R3, #10
-bne -7
+bne -6
 hlt
