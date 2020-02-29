@@ -4,6 +4,8 @@
 
 It is a simplified PDP11-based microprocessor that can execute the program loaded in its ram.
  The microprocessor has the following characteristics:
+ 
+![Schematic](https://user-images.githubusercontent.com/32196766/75615024-993def00-5b47-11ea-8493-82f812c8c8d2.jpg)
 
 - Word Length: 16 bits
 - Memory Size: 4K words
@@ -30,7 +32,6 @@ It is a simplified PDP11-based microprocessor that can execute the program loade
 		- N: Negative Flag (1 if ALU result sign is Neg)
 		- P: Parity Flag (1 if ALU result is even)
 		- O: Overflow Flag (1 if P+P=N or N+N=P or P-N=N or N-P=P)
-
 
 ## Instruction Set
 
